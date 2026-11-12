@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Tienda TCG</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; color: #222; }
+    h1 { text-align: center; margin: 0 0 25px; }
+    h1 a { color: #333; text-decoration: none; }
+    .seccion-categorias, .zona-colecciones, .zona-tienda { max-width: 1200px; margin: 0 auto 30px; }
+    .titulo-seccion { font-size: 22px; font-weight: bold; margin-bottom: 20px; text-align: center; }
+    .grid-categorias { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; padding: 10px; }
+    .tarjeta-categoria { position: relative; height: 220px; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 10px #0002; background-color: #222; opacity: .55; pointer-events: none; transition: transform .2s, opacity .2s; }
+    .tarjeta-categoria.lista-para-clic { opacity: 1; pointer-events: auto; }
+    .tarjeta-categoria:hover { transform: translateY(-4px); }
+    .cat-pokemon { background: linear-gradient(135deg,#0008,#000b),url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3PsRvAUvyvwGI6EHkR_UMOtDke2xDAAVG7w_yzARg4g8O3KZmrEglWbo&s=10') center/cover no-repeat; border-left: 5px solid #ffcb05; }
+    .cat-yugioh { background: linear-gradient(135deg,#0008,#000b),url('https://static.wikia.nocookie.net/yugiohenespanol/images/1/1b/Logo_Yu-Gi-Oh.png/revision/latest?cb=20101022192739&path-prefix=es') center/cover no-repeat; border-left: 5px solid #ff1a1a; }
+    .cat-dragonball { background: linear-gradient(135deg,#0008,#000b),url('https://upload.wikimedia.org/wikipedia/commons/2/22/Dragon_Ball_Super.png') center/contain no-repeat #1a1a1a; border-left: 5px solid #ff7b00; }
+    .cat-goddess { background: linear-gradient(135deg,#0008,#000b),url('https://m.media-amazon.com/images/I/71XNyg2peYL._AC_UF894,1000_QL80_.jpg') center/cover no-repeat; border-left: 5px solid #a200ff; }
+    .texto-categoria { position: absolute; bottom: 15px; left: 15px; color: #fff; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 4px #000; }
+    .estado-carga { position: absolute; top: 15px; right: 15px; color: #fff; font-size: 12px; }
+    .zona-colecciones, .zona-tienda, #seccion-opciones-juego { display: none; }
+    .grid-colecciones { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 15px; margin-top: 15px; }
+    .btn-coleccion { background: #fff; border: 2px solid #ccc; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; cursor: pointer; box-shadow: 0 2px 5px #0001; }
+    .btn-coleccion:hover { background: #eee; border-color: #333; }
+    .btn-volver { background: #333; color: #fff; border: 0; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+    .buscador-contenedor { text-align: center; margin: 0 auto 20px; }
+    #buscador { padding: 10px; width: min(100%, 420px); font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    .grid-tienda { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 20px; }
+    .tarjeta-carta { background: #fff; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px #0002; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+    .tarjeta-carta img { max-width: 100%; height: auto; border-radius: 5px; margin-bottom: 10px; max-height: 250px; object-fit: contain; }
+    .nombre-carta { font-size: 16px; font-weight: bold; margin-bottom: 10px; overflow-wrap: anywhere; }
+    .detalles { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.5; text-align: left; overflow-wrap: anywhere; }
+    .precio { font-size: 18px; font-weight: bold; color: #e63946; margin: 8px 0; }
+    .stock { font-size: 12px; color: #2a9d8f; font-weight: bold; margin-bottom: 10px; }
+    .btn-comprar { background: #007bff; color: #fff; border: 0; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+    .btn-comprar:disabled { background: #ccc; cursor: not-allowed; }
+    #paginacion-controles { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin: 35px 0 20px; }
+    #paginacion-controles button { padding: 8px 13px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    #paginacion-controles button:disabled { opacity: .45; cursor: not-allowed; }
+    #paginacion-controles button.activa { background: #007bff; color: #fff; border-color: #007bff; }
+    .btn-carrito-flotante { position: fixed; bottom: 20px; right: 20px; background: #a63046; color: #fff; padding: 14px 18px; border-radius: 7px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px #0003; z-index: 9999; }
+    .opciones-juego { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    .opcion-juego { cursor: pointer; padding: 30px; min-width: 220px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #fff; text-align: center; }
+    .opcion-juego .emoji { font-size: 40px; margin-bottom: 10px; }
+    .opcion-juego small { display: block; color: #ccc; margin-top: 7px; }
+    #mensaje-carga { text-align: center; color: #666; }
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .grid-categorias { grid-template-columns: repeat(auto-fit,minmax(179px,1fr)); gap: 12px; padding: 5px; }
+      .tarjeta-categoria { height: 150px; }
+      .texto-categoria { font-size: 15px; bottom: 8px; left: 10px; }
+      .grid-tienda { grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); gap: 10px; }
+      .tarjeta-carta { padding: 15px; }
+      .tarjeta-carta img { max-height: 250px; }
+      .nombre-carta { font-size: 14px; }
+      .detalles { font-size: 11px; }
+      .precio { font-size: 16px; }
+      .btn-carrito-flotante { right: 12px; bottom: 12px; padding: 11px 14px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <h1><a href="#" onclick="irAlInicioTienda(event)">🃏 Mi Tienda de Cartas TCG 🃏</a></h1>
+
+  <div class="buscador-contenedor">
+    <input type="text" id="buscador" placeholder="Buscar por nombre o código..." oninput="ejecutarBusquedaGlobal()">
+  </div>
+
+  <div id="seccion-inicial" class="seccion-categorias">
+    <div class="titulo-seccion">Cartas y coleccionables de tus sagas favoritas</div>
+    <div class="grid-categorias">
+      <div id="btn-poke" class="tarjeta-categoria cat-pokemon" onclick="filtrarPorSaga('Pokémon')"><div class="texto-categoria">Pokémon</div><div class="estado-carga">Cargando...</div></div>
+      <div id="btn-yugi" class="tarjeta-categoria cat-yugioh" onclick="filtrarPorSaga('Yu-Gi-Oh')"><div class="texto-categoria">Yu-Gi-Oh!</div><div class="estado-carga">Cargando...</div></div>
+      <div id="btn-db" class="tarjeta-categoria cat-dragonball" onclick="filtrarPorSaga('Dragon Ball')"><div class="texto-categoria">Super Dragon Ball HEROES</div><div class="estado-carga">Cargando...</div></div>
+      <div id="btn-god" class="tarjeta-categoria cat-goddess" onclick="filtrarPorSaga('Goddess')"><div class="texto-categoria">Goddess Story</div><div class="estado-carga">Cargando...</div></div>
+    </div>
+  </div>
+
+  <div id="seccion-opciones-juego" class="zona-colecciones" style="text-align:center;padding:35px 15px;">
+    <h2 id="titulo-opciones-juego">Opciones</h2>
+    <div class="opciones-juego">
+      <div class="opcion-juego" onclick="abrirSingles()"><div class="emoji">🃏</div><strong>Singles</strong><small>Ver cartas disponibles en stock</small></div>
+      <div class="opcion-juego" onclick="abrirColecciones()"><div class="emoji">📁</div><strong>Colecciones</strong><small>Explorar por carpetas y sets</small></div>
+    </div>
+    <button class="btn-volver" onclick="regresarAlMenuDesdeOpciones()" style="margin-top:35px;">⬅️ Volver a Sagas</button>
+  </div>
+
+  <div id="seccion-colecciones" class="zona-colecciones">
+    <button class="btn-volver" onclick="volverAlMenuInicial()">⬅ Volver a Sagas</button>
+    <div class="titulo-seccion" id="titulo-juego-seleccionado">Colecciones disponibles</div>
+    <div id="contenedor-colecciones" class="grid-colecciones"></div>
+  </div>
+
+  <div id="seccion-tienda" class="zona-tienda">
+    <button class="btn-volver" id="btn-volver-tienda" onclick="volverAlMenuInicial()">⬅ Volver a Sagas</button>
+    <div id="contenedor-tienda" class="grid-tienda"></div>
+    <div id="paginacion-controles"></div>
+  </div>
+
+  <a href="carrito.html" class="btn-carrito-flotante">🛒 Carrito (<span id="carrito-contador">0</span>)</a>
+
+<script>
+'use strict';
+
+const CSV_URL = 'bacserito.csv';
+const LIMITE_POR_PAGINA = 32;
+let todasLasCartas = [];
+let cartasDeSagaActual = [];
+let cartasDeColeccionActual = [];
+let carrito = [];
+let sagaSeleccionada = '';
+let modoActual = 'colecciones';
+let paginaActual = 1;
+
+const $ = (id) => document.getElementById(id);
+const normalizar = (valor) => String(valor ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+const stockDe = (carta) => Math.max(0, parseInt(String(carta?.cantidad ?? carta?.Cantidad ?? carta?.stock ?? 0).replace(/[^\d-]/g, ''), 10) || 0);
+const disponibleDe = (carta) => ['TRUE', 'VERDADERO', '1', 'SI', 'SÍ'].includes(String(carta?.disponibilidad ?? '').trim().toUpperCase());
+const escapar = (valor) => String(valor ?? '').replace(/[&<>"']/g, caracter => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caracter]));
+
+function separarCSV(linea, separador = ';') {
+  const resultado = [];
+  let valor = '', entreComillas = false;
+  for (let i = 0; i < linea.length; i++) {
+    const caracter = linea[i];
+    if (caracter === '"') {
+      if (entreComillas && linea[i + 1] === '"') { valor += '"'; i++; }
+      else entreComillas = !entreComillas;
+    } else if (caracter === separador && !entreComillas) {
+      resultado.push(valor.trim()); valor = '';
+    } else valor += caracter;
+  }
+  resultado.push(valor.trim());
+  return resultado;
+}
+
+function convertirFila(celdas) {
+  const url = celdas.find(c => /^https?:\/\//i.test(c)) || '';
+  const limpio = (indice, defecto = '') => String(celdas[indice] ?? defecto).trim();
+  const disponibilidad = celdas.some(c => ['FALSE','FALSO'].includes(String(c).trim().toUpperCase())) ? 'FALSE' : 'TRUE';
+  return {
+    nombre: limpio(0), codigo: limpio(1), rareza: limpio(2), coleccion: limpio(3, 'General'),
+    edicion: limpio(4), idioma: limpio(5), estado: limpio(6), juego: limpio(7, 'Yu-Gi-Oh'),
+    precio: limpio(8, '1.00') || '1.00', cantidad: limpio(9, '0') || '0',
+    disponibilidad, foto: url || 'https://placehold.co/300x420?text=Sin+imagen'
+  };
+}
+
+async function cargarCatalogo() {
+  try {
+    const respuesta = await fetch(CSV_URL + '?v=' + Date.now(), { cache: 'no-store' });
+    if (!respuesta.ok) throw new Error('No se pudo cargar ' + CSV_URL + ' (HTTP ' + respuesta.status + ')');
+    let texto = new TextDecoder('utf-8').decode(await respuesta.arrayBuffer());
+    if (texto.charCodeAt(0) === 0xFEFF) texto = texto.slice(1);
+    const lineas = texto.split(/\r?\n/).filter(linea => linea.trim() !== '');
+    todasLasCartas = lineas.slice(1).map(linea => convertirFila(separarCSV(linea))).filter(c => c.nombre && c.codigo);
+    document.querySelectorAll('.tarjeta-categoria').forEach(t => {
+      t.classList.add('lista-para-clic');
+      const estado = t.querySelector('.estado-carga');
+      if (estado) estado.textContent = 'Listo';
+    });
+    recuperarCarrito();
+    recuperarNavegacion();
+  } catch (error) {
+    console.error(error);
+    $('mensaje-carga').textContent = 'No se pudo cargar el catálogo. Revisa que bacserito.csv esté en la misma carpeta que este HTML.';
+  }
+}
+
+function mostrarPantalla(id) {
+  ['seccion-inicial','seccion-opciones-juego','seccion-colecciones','seccion-tienda'].forEach(seccion => {
+    $(seccion).style.display = seccion === id ? 'block' : 'none';
+  });
+}
+
+function filtrarPorSaga(saga) {
+  sagaSeleccionada = saga;
+  modoActual = 'colecciones';
+  localStorage.setItem('ultimaSaga', saga);
+  localStorage.removeItem('ultimaColeccion');
+  $('titulo-opciones-juego').textContent = `Opciones para ${saga}`;
+  mostrarPantalla('seccion-opciones-juego');
+  window.scrollTo(0, 0);
+}
+
+function cartasDeSaga(saga) {
+  const buscado = normalizar(saga);
+  return todasLasCartas.filter(c => {
+    const juego = normalizar(c.juego);
+    return (juego.includes(buscado) || buscado.includes(juego)) && stockDe(c) > 0;
+  });
+}
+
+function abrirSingles() {
+  modoActual = 'singles';
+  cartasDeSagaActual = cartasDeSaga(sagaSeleccionada);
+  cartasDeColeccionActual = cartasDeSagaActual.filter(c => disponibleDe(c));
+  ordenarPorStock(cartasDeColeccionActual);
+  $('btn-volver-tienda').textContent = '⬅️ Volver a Opciones';
+  $('btn-volver-tienda').onclick = () => mostrarPantalla('seccion-opciones-juego');
+  abrirTienda(cartasDeColeccionActual);
+}
+
+function abrirColecciones() {
+  modoActual = 'colecciones';
+  cartasDeSagaActual = cartasDeSaga(sagaSeleccionada);
+  const colecciones = [...new Set(cartasDeSagaActual.map(c => c.coleccion).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
+  const contenedor = $('contenedor-colecciones');
+  contenedor.innerHTML = '';
+  $('titulo-juego-seleccionado').textContent = `Colecciones de ${sagaSeleccionada}`;
+  if (!colecciones.length) contenedor.innerHTML = '<p>No hay colecciones con stock para esta saga.</p>';
+  colecciones.forEach(nombre => {
+    const boton = document.createElement('button');
+    boton.className = 'btn-coleccion';
+    boton.type = 'button';
+    boton.textContent = nombre;
+    boton.onclick = () => filtrarPorColeccion(nombre);
+    contenedor.appendChild(boton);
+  });
+  mostrarPantalla('seccion-colecciones');
+  window.scrollTo(0, 0);
+}
+
+function filtrarPorColeccion(nombre) {
+  localStorage.setItem('ultimaColeccion', nombre);
+  cartasDeColeccionActual = cartasDeSagaActual.filter(c => normalizar(c.coleccion) === normalizar(nombre));
+  ordenarPorStock(cartasDeColeccionActual);
+  $('btn-volver-tienda').textContent = '⬅️ Volver a Colecciones';
+  $('btn-volver-tienda').onclick = volverAColecciones;
+  abrirTienda(cartasDeColeccionActual);
+}
+
+function ordenarPorStock(cartas) {
+  cartas.sort((a,b) => stockDe(b) - stockDe(a));
+}
+
+function abrirTienda(cartas) {
+  paginaActual = 1;
+  mostrarPantalla('seccion-tienda');
+  mostrarCartas(cartas);
+  window.scrollTo(0, 0);
+}
+
+function mostrarCartas(cartas) {
+  const contenedor = $('contenedor-tienda');
+  const paginacion = $('paginacion-controles');
+  contenedor.innerHTML = '';
+  paginacion.innerHTML = '';
+
+  if (!cartas.length) {
+    contenedor.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;color:#777;">No se encontraron cartas disponibles.</p>';
+    return;
+  }
+
+  const totalPaginas = Math.ceil(cartas.length / LIMITE_POR_PAGINA);
+  paginaActual = Math.min(Math.max(1, paginaActual), totalPaginas);
+  const inicio = (paginaActual - 1) * LIMITE_POR_PAGINA;
+  cartas.slice(inicio, inicio + LIMITE_POR_PAGINA).forEach(carta => {
+    const indice = cartasDeColeccionActual.indexOf(carta);
+    const disponible = disponibleDe(carta) && stockDe(carta) > 0;
+    const precio = !carta.precio || Number(carta.precio.replace(',', '.')) === 0 ? '1.00' : carta.precio;
+    const tarjeta = document.createElement('article');
+    tarjeta.className = 'tarjeta-carta';
+    tarjeta.innerHTML = `
+      <div>
+        <img src="${escapar(carta.foto)}" alt="${escapar(carta.nombre)}" loading="lazy" onerror="this.src='https://placehold.co/300x420?text=Sin+imagen'">
+        <div class="nombre-carta">${escapar(carta.nombre)}</div>
+        <div class="detalles">
+          Colección: <strong>${escapar(carta.coleccion)}</strong><br>
+          Código: <strong>${escapar(carta.codigo)}</strong><br>
+          Estado: ${escapar(carta.estado)} | Rareza: ${escapar(carta.rareza)}<br>
+          Edición: ${escapar(carta.edicion)}<br>
+          Idioma: ${escapar(carta.idioma)}
+        </div>
+      </div>
+      <div>
+        <div class="precio">S/. ${escapar(precio)}</div>
+        <div class="stock">📦 Stock: ${stockDe(carta)} unids.</div>
+        <button class="btn-comprar" ${!disponible ? 'disabled' : ''}>${disponible ? 'Añadir al Carrito' : 'Agotado'}</button>
+      </div>`;
+    tarjeta.querySelector('.btn-comprar').addEventListener('click', () => agregarAlCarrito(carta));
+    contenedor.appendChild(tarjeta);
+  });
+
+  if (totalPaginas > 1) {
+    const agregarBoton = (texto, pagina, deshabilitado = false, activa = false) => {
+      const boton = document.createElement('button');
+      boton.textContent = texto;
+      boton.disabled = deshabilitado;
+      if (activa) boton.classList.add('activa');
+      boton.onclick = () => { paginaActual = pagina; mostrarCartas(cartas); window.scrollTo(0,0); };
+      paginacion.appendChild(boton);
+    };
+    agregarBoton('«', 1, paginaActual === 1);
+    agregarBoton('‹', paginaActual - 1, paginaActual === 1);
+    for (let p = 1; p <= totalPaginas; p++) agregarBoton(String(p), p, false, p === paginaActual);
+    agregarBoton('›', paginaActual + 1, paginaActual === totalPaginas);
+    agregarBoton('»', totalPaginas, paginaActual === totalPaginas);
+  }
+}
+
+function ejecutarBusquedaGlobal() {
+  const busqueda = normalizar($('buscador').value);
+  if (!busqueda) { volverAlMenuInicial(); return; }
+  if (!todasLasCartas.length) return;
+
+  const resultados = todasLasCartas.filter(c =>
+    (normalizar(c.nombre).includes(busqueda) || normalizar(c.codigo).includes(busqueda)) &&
+    disponibleDe(c) && stockDe(c) > 0
+  );
+  ordenarPorStock(resultados);
+  cartasDeColeccionActual = resultados;
+  $('btn-volver-tienda').textContent = '⬅️ Volver a Sagas';
+  $('btn-volver-tienda').onclick = volverAlMenuInicial;
+  abrirTienda(resultados);
+}
+
+function agregarAlCarrito(carta) {
+  if (!carta || !disponibleDe(carta) || stockDe(carta) <= 0) return;
+  const existente = carrito.find(item => item.codigo === carta.codigo);
+  if (existente) {
+    if (existente.cantidadSeleccionada >= stockDe(carta)) {
+      alert('No hay más unidades disponibles de esta carta.');
+      return;
+    }
+    existente.cantidadSeleccionada++;
+  } else {
+    carrito.push({...carta, cantidadSeleccionada: 1});
+  }
+  actualizarInterfazCarrito();
+}
+
+function eliminarDelCarrito(codigo) {
+  carrito = carrito.filter(item => item.codigo !== codigo);
+  actualizarInterfazCarrito();
+}
+
+function vaciarCarrito() {
+  if (!carrito.length) return;
+  if (confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
+    carrito = [];
+    actualizarInterfazCarrito();
+  }
+}
+
+function cambiarCantidad(codigo, cambio) {
+  const producto = carrito.find(item => item.codigo === codigo);
+  if (!producto) return;
+  const nuevaCantidad = producto.cantidadSeleccionada + cambio;
+  if (nuevaCantidad <= 0) return eliminarDelCarrito(codigo);
+  if (nuevaCantidad > stockDe(producto)) {
+    alert('No hay más unidades disponibles.');
+    return;
+  }
+  producto.cantidadSeleccionada = nuevaCantidad;
+  actualizarInterfazCarrito();
+}
+
+function actualizarInterfazCarrito() {
+  const total = carrito.reduce((suma, item) => suma + (Number(item.cantidadSeleccionada) || 0), 0);
+  $('carrito-contador').textContent = total;
+  localStorage.setItem('carritoGuardado', JSON.stringify(carrito));
+}
+
+function recuperarCarrito() {
+  try {
+    const guardado = JSON.parse(localStorage.getItem('carritoGuardado') || '[]');
+    carrito = Array.isArray(guardado) ? guardado.filter(item => item && item.codigo) : [];
+  } catch (error) {
+    console.warn('El carrito guardado no se pudo recuperar:', error);
+    carrito = [];
+  }
+  actualizarInterfazCarrito();
+}
+
+function recuperarNavegacion() {
+  const saga = localStorage.getItem('ultimaSaga');
+  const coleccion = localStorage.getItem('ultimaColeccion');
+  if (!saga) return;
+  sagaSeleccionada = saga;
+  if (coleccion) {
+    cartasDeSagaActual = cartasDeSaga(saga);
+    abrirColecciones();
+    filtrarPorColeccion(coleccion);
+  }
+}
+
+function volverAlMenuInicial() {
+  $('buscador').value = '';
+  localStorage.removeItem('ultimaColeccion');
+  localStorage.removeItem('ultimaSaga');
+  $('btn-volver-tienda').onclick = volverAlMenuInicial;
+  mostrarPantalla('seccion-inicial');
+  window.scrollTo(0,0);
+}
+
+function volverAColecciones() {
+  $('buscador').value = '';
+  localStorage.removeItem('ultimaColeccion');
+  abrirColecciones();
+}
+
+function regresarAlMenuDesdeOpciones() {
+  localStorage.removeItem('ultimaSaga');
+  localStorage.removeItem('ultimaColeccion');
+  mostrarPantalla('seccion-inicial');
+}
+
+function irAlInicioTienda(event) {
+  if (event) event.preventDefault();
+  volverAlMenuInicial();
+}
+
+cargarCatalogo();
+</script>
+</body>
+</html>
