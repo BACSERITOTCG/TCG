@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tu Carrito - Mi tienda TCG</title>
+        <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 0; padding: 36px; color: #333; }
+        .regresar-tienda { display: inline-block; color: #007bff; text-decoration: none; font-weight: bold; margin-bottom: 20px; font-size: 15px; }
+
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 0; padding: 30px; color: #333; }
+        .regresar-tienda { display: inline-block; color: #007bff; text-decoration: none; font-weight: bold; margin-bottom: 20px; font-size: 15px; }
+        .regresar-tienda:hover { text-decoration: underline; }
+        
+        /* DISEÑO ESTRUCTURAL EN DOS COLUMNAS */
+        .contenedor-carrito-global { display: flex; max-width: 1200px; margin: 0 auto; gap: 30px; align-items: flex-start; }
+        .seccion-tabla { flex: 2; background: white; padding: 25px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .seccion-resumen { flex: 1; background: white; padding: 25px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 20px; }
+
+        /* CABECERA DE TABLA Y BOTÓN VACIAR */
+        .cabecera-carrito { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .titulo-carrito { font-size: 20px; font-weight: bold; margin: 0; }
+        .btn-vaciar { background: none; border: 1px solid #dc3545; color: #dc3545; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .btn-vaciar:hover { background: #dc3545; color: white; }
+
+        /* TABLA DE PRODUCTOS */
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { font-size: 13px; color: #666; padding-bottom: 12px; border-bottom: 2px solid #eee; font-weight: normal; }
+        td { padding: 15px 0; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
+        
+        .input-cantidad { width: 45px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold; }
+        .codigo-empresa { color: #555; font-family: monospace; font-size: 13px; }
+        .nombre-producto { font-weight: bold; color: #222; margin-bottom: 4px; line-height: 1.3; }
+        .detalles-producto { font-size: 12px; color: #777; }
+        .precio-texto { font-weight: bold; white-space: nowrap; }
+
+                /* BOTÓN DE BORRAR INDIVIDUAL CON MARGEN Y ESTILO MEJORADO */
+        .btn-borrar-item { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+            width: 34px; 
+            height: 34px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 15px; 
+            transition: all 0.2s; 
+            margin-left: 15px; /* 👈 Esto evita que se pegue al precio */
+        }
+        .btn-borrar-item:hover { 
+            background-color: #dc3545; 
+            color: white; 
+            border-color: #dc3545; 
+        }
+
+        /* FILA TOTAL INFERIOR EN TABLA */
+        .fila-total td { font-weight: bold; font-size: 15px; border-bottom: none; padding-top: 20px; }
+
+        /* BLOQUE RESUMEN LATERAL */
+        .titulo-resumen { font-size: 18px; font-weight: bold; margin: 0 0 20px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .fila-subtotal { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 25px; }
+        .monto-subtotal { font-weight: bold; }
+
+        /* BOTONES DE ACCIÓN */
+        .btn-procesar { background-color: #3498db; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; width: 100%; border-radius: 4px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .btn-procesar:hover { background-color: #2980b9; }
+        .btn-descargar { background-color: #6c757d; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; width: 100%; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .btn-descargar:hover { background-color: #5a6268; }
+
+        /* ESTILOS EXCLUSIVOS PARA LA IMPRESIÓN EN PDF (OCULTA BOTONES INCÓMODOS) */
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .regresar-tienda, .btn-vaciar, .seccion-resumen, .btn-borrar-item, th:last-child, td:last-child { display: none !important; }
+            .seccion-tabla { flex: 1; box-shadow: none; padding: 0; }
+            .contenedor-carrito-global { display: block; }
+            .input-cantidad { border: none; background: transparent; font-size: 14px; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+                    /* Corrección para que el total se imprima perfectamente sin letras raras */
+        @media print {
+            .seccion-tabla::after { 
+                content: "Resumen de pedido \A Subtotal: " attr(data-total); 
+                display: block; 
+                text-align: right; 
+                font-weight: bold; 
+                font-size: 16px; 
+                margin-top: 40px; 
+                white-space: pre-wrap; 
+                border-top: 2px dashed #333;
+                padding-top: 15px;
+            }
+        }
+    }    
+
+        /* MODO DIURNO / NOCTURNO: estilos adicionales, sin alterar la estructura */
+        :root {
+            color-scheme: light;
+            --fondo-carrito: #f8f9fa;
+            --superficie-carrito: #ffffff;
+            --texto-carrito: #333333;
+            --texto-secundario-carrito: #777777;
+            --borde-carrito: #eeeeee;
+            --campo-carrito: #ffffff;
+        }
+        body[data-tema="oscuro"] {
+            color-scheme: dark;
+            --fondo-carrito: #11151d;
+            --superficie-carrito: #1b2230;
+            --texto-carrito: #edf1f7;
+            --texto-secundario-carrito: #aab5c7;
+            --borde-carrito: #354154;
+            --campo-carrito: #242d3d;
+        }
+        body {
+            background-color: var(--fondo-carrito);
+            color: var(--texto-carrito);
+            transition: background-color .2s ease, color .2s ease;
+        }
+        .seccion-tabla, .seccion-resumen {
+            background: var(--superficie-carrito);
+            color: var(--texto-carrito);
+            transition: background .2s ease, color .2s ease;
+        }
+        .titulo-carrito, .titulo-resumen, .nombre-producto,
+        .fila-total td, .monto-subtotal, .precio-texto {
+            color: var(--texto-carrito);
+        }
+        th, td { border-color: var(--borde-carrito); }
+        th, .detalles-producto, .codigo-empresa {
+            color: var(--texto-secundario-carrito);
+        }
+        .input-cantidad {
+            background: var(--campo-carrito);
+            color: var(--texto-carrito);
+            border-color: var(--borde-carrito);
+        }
+        body[data-tema="oscuro"] .titulo-resumen { border-bottom-color: var(--borde-carrito); }
+        body[data-tema="oscuro"] .seccion-tabla h1, body[data-tema="oscuro"] .seccion-tabla h2, body[data-tema="oscuro"] .seccion-resumen h3 { color: var(--texto-carrito) !important; }
+        body[data-tema="oscuro"] .fila-total td { border-bottom-color: var(--borde-carrito); }
+        .btn-tema-carrito {
+            position: fixed;
+            top: 18px;
+            right: 22px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 13px;
+            border: 1px solid var(--borde-carrito);
+            border-radius: 999px;
+            background: var(--superficie-carrito);
+            color: var(--texto-carrito);
+            font: bold 13px Arial, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,.10);
+        }
+        .btn-tema-carrito:hover { filter: brightness(.96); }
+        @media (max-width: 600px) {
+            .btn-tema-carrito { top: 10px; right: 10px; padding: 8px 10px; font-size: 12px; }
+        }
+
+        </style>
+    </head>
+    <body>
+
+    <!-- COPIAR Y PEGAR ESTO JUSTO AQUÍ ABAJO DE BODY -->
+    <div style="text-align: center; margin-bottom: 30px; padding: 20px;">
+        <button type="button" id="btn-tema-carrito" class="btn-tema-carrito" onclick="alternarTemaCarrito()" aria-label="Cambiar a modo nocturno">
+            <span id="icono-tema-carrito" aria-hidden="true">🌙</span>
+            <span id="texto-tema-carrito">Modo nocturno</span>
+        </button>
+        <a href="index.html" style="text-decoration: none; color: inherit; display: inline-block;">
+            <h1 style="margin: 0; font-size: 28px; font-family: Arial, sans-serif; color: #333; cursor: pointer;">🃏 Mi Tienda de Cartas TCG 🃏</h1>
+        </a>
+    </div>
+
+        <a href="index.html" class="regresar-tienda"><i class="fa-solid fa-arrow-left"></i> Volver a la Tienda</a>
+
+        <div class="contenedor-carrito-global">
+        
+            <!-- COLUMNA IZQUIERDA: DETALLE DEL CARRITO -->
+            <div class="seccion-tabla" id="bloque-tabla-imprimir">
+                <div class="cabecera-carrito">
+                    <h2 class="titulo-carrito">Tu carrito</h2>
+                    <button class="btn-vaciar" onclick="vaciarCarritoCompleto()"><i class="fa-solid fa-trash-can"></i> Vaciar carrito</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Cant</th>
+                            <th style="width: 120px;">Cod Empresa</th>
+                            <th>Producto</th>
+                            <th style="width: 100px; text-align: right;">Precio</th>
+                            <th style="width: 50px; text-align: center;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-items-carrito">
+                        <!-- Se carga dinámicamente -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="fila-total">
+                            <td>TOTAL</td>
+                            <td></td>
+                            <td></td>
+                            <td style="text-align: right; color: #333;" id="tabla-gran-total">S/. 0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- COLUMNA DERECHA: TOTALES Y ACCIONES -->
+            <div class="seccion-resumen">
+                <h3 class="titulo-resumen">Resumen de pedido</h3>
+                <div class="fila-subtotal">
+                    <span>Subtotal :</span>
+                    <span class="monto-subtotal" id="resumen-subtotal">S/. 0.00</span>
+                </div>
+        <button class="btn-procesar" onclick="mandarMensajeDirecto()"><i class="fa-solid fa-credit-card"></i> Procesar compra</button>
+        <button class="btn-descargar" onclick="descargarPedidoPDF()"><i class="fa-solid fa-file-download"></i> Descargar pedido</button>
+            </div>
+
+        </div>
+
+        <script>
+        'use strict';
+        let carrito = [];
+        let catalogoPorIdentidad = new Map();
+        const normalizarIdentidad = valor => String(valor ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+        function identidadCarta(carta) { return JSON.stringify(['juego','codigo','coleccion','edicion','rareza','idioma'].map(k => normalizarIdentidad(carta?.[k] ?? '')).concat([String(carta?.foto ?? '').trim().toLowerCase()])); }
+        let catalogoValidado = false;
+
+        const leerLocalCarrito = (clave, defecto = '') => {
+            try { return localStorage.getItem(clave) ?? defecto; } catch (_) { return defecto; }
+        };
+        const guardarLocalCarrito = (clave, valor) => {
+            try { localStorage.setItem(clave, String(valor)); return true; } catch (_) { return false; }
+        };
+
+        function aplicarTemaCarrito(tema) {
+            const oscuro = tema === 'oscuro';
+            document.body.dataset.tema = oscuro ? 'oscuro' : 'claro';
+            const icono = document.getElementById('icono-tema-carrito');
+            const texto = document.getElementById('texto-tema-carrito');
+            const boton = document.getElementById('btn-tema-carrito');
+            if (icono) icono.textContent = oscuro ? '☀️' : '🌙';
+            if (texto) texto.textContent = oscuro ? 'Modo diurno' : 'Modo nocturno';
+            if (boton) boton.setAttribute('aria-label', oscuro ? 'Cambiar a modo diurno' : 'Cambiar a modo nocturno');
+            guardarLocalCarrito('temaTiendaTCG', oscuro ? 'oscuro' : 'claro');
+        }
+        function alternarTemaCarrito() {
+            aplicarTemaCarrito(document.body.dataset.tema === 'oscuro' ? 'claro' : 'oscuro');
+        }
+        function recuperarTemaCarrito() {
+            aplicarTemaCarrito(leerLocalCarrito('temaTiendaTCG', 'claro'));
+        }
+
+        function separarCSVSeguro(linea, separador = ';') {
+            const resultado = [];
+            let valor = '', entreComillas = false;
+            for (let i = 0; i < linea.length; i++) {
+                const caracter = linea[i];
+                if (caracter === '"') {
+                    if (entreComillas && linea[i + 1] === '"') { valor += '"'; i++; }
+                    else entreComillas = !entreComillas;
+                } else if (caracter === separador && !entreComillas) {
+                    resultado.push(valor.trim()); valor = '';
+                } else valor += caracter;
+            }
+            resultado.push(valor.trim());
+            return resultado;
+        }
+        function precioNumerico(valor) {
+            let texto = String(valor ?? '').trim().replace(/[^0-9,.-]/g, '');
+            if (texto.includes(',') && !texto.includes('.')) texto = texto.replace(',', '.');
+            else texto = texto.replace(/,(?=\d{3}(?:\D|$))/g, '').replace(',', '.');
+            const numero = Number(texto);
+            return Number.isFinite(numero) && numero >= 0 ? numero : NaN;
+        }
+        function enteroSeguro(valor, defecto = 0) {
+            const numero = Number.parseInt(String(valor ?? '').replace(/[^\d-]/g, ''), 10);
+            return Number.isSafeInteger(numero) ? numero : defecto;
+        }
+        async function cargarCatalogoSeguro() {
+            const respuesta = await fetch('bacserito.csv?v=' + Date.now(), { cache: 'no-store' });
+            if (!respuesta.ok) throw new Error('No se pudo validar el catálogo.');
+            let texto = new TextDecoder('utf-8').decode(await respuesta.arrayBuffer());
+            if (texto.charCodeAt(0) === 0xFEFF) texto = texto.slice(1);
+            const lineas = texto.split(/\r?\n/).filter(linea => linea.trim());
+            const mapa = new Map();
+            lineas.slice(1).forEach(linea => {
+                const c = separarCSVSeguro(linea);
+                const codigo = String(c[1] ?? '').trim();
+                const nombre = String(c[0] ?? '').trim();
+                if (!codigo || !nombre) return;
+                const url = c.find(v => /^https?:\/\//i.test(v)) || 'https://placehold.co/300x420?text=Sin+imagen';
+                const precio = precioNumerico(c[8] || '0');
+                const stock = Math.max(0, enteroSeguro(c[9], 0));
+                const disponibilidad = !c.some(v => ['FALSE', 'FALSO'].includes(String(v).trim().toUpperCase()));
+                const carta = {
+                    nombre, codigo, rareza: c[2] || '', coleccion: c[3] || 'General',
+                    edicion: c[4] || '', idioma: c[5] || '', estado: c[6] || '',
+                    juego: c[7] || 'Yu-Gi-Oh', precio: Number.isFinite(precio) ? precio : 0,
+                    cantidad: stock, disponibilidad, foto: url
+                };
+                mapa.set(identidadCarta(carta), carta);
+            });
+            catalogoPorIdentidad = mapa;
+            catalogoValidado = true;
+        }
+
+        function normalizarCarritoGuardado(datos) {
+            if (!Array.isArray(datos)) return [];
+            const resultado = [];
+            datos.forEach(item => {
+                if (!item || typeof item.codigo !== 'string') return;
+                const clave = identidadCarta(item);
+                const oficial = catalogoPorIdentidad.get(clave);
+                const cantidadSolicitada = enteroSeguro(item.cantidadSeleccionada, 1);
+                if (!oficial) {
+                    resultado.push({ ...item, idCarta: clave, cantidadSeleccionada: Math.max(1, cantidadSolicitada), pendienteValidacion: true });
+                    return;
+                }
+                if (!oficial.disponibilidad || oficial.cantidad <= 0) {
+                    resultado.push({ ...oficial, idCarta: clave, cantidadSeleccionada: Math.max(1, cantidadSolicitada), pendienteValidacion: true });
+                    return;
+                }
+                const cantidad = Math.min(Math.max(1, cantidadSolicitada), oficial.cantidad);
+                resultado.push({ ...oficial, idCarta: clave, cantidadSeleccionada: cantidad });
+            });
+            return resultado;
+        }
+        function cargarCarritoDeMemoria() {
+            try {
+                const datos = JSON.parse(leerLocalCarrito('carritoGuardado', '[]'));
+                carrito = normalizarCarritoGuardado(datos);
+                guardarCarrito();
+            } catch (error) {
+                console.warn('El carrito guardado estaba dañado y se reinició.', error);
+                carrito = [];
+                guardarCarrito();
+            }
+            renderizarTablaCarrito();
+        }
+        function guardarCarrito() {
+            guardarLocalCarrito('carritoGuardado', JSON.stringify(carrito));
+        }
+        function mandarMensajeDirecto() {
+            if (!catalogoValidado) {
+                alert('No se pudo verificar el catálogo. Actualiza la página e inténtalo nuevamente.');
+                return;
+            }
+            if (!carrito.length) return;
+            // Se vuelve a validar cada línea contra el CSV justo antes de preparar el pedido.
+            const lineas = [];
+            let sumaTotalPedido = 0;
+            for (const item of carrito) {
+                const clave = identidadCarta(item);
+                const oficial = catalogoPorIdentidad.get(clave);
+                const cantidad = enteroSeguro(item.cantidadSeleccionada, 0);
+                if (!oficial || !oficial.disponibilidad || cantidad < 1 || cantidad > oficial.cantidad) {
+                    alert('Uno de los productos ya no está disponible en la cantidad solicitada. Actualiza el carrito.');
+                    cargarCarritoDeMemoria();
+                    return;
+                }
+                const total = oficial.precio * cantidad;
+                sumaTotalPedido += total;
+                lineas.push(`▪️ *${oficial.nombre}* [${oficial.codigo}]\n   Rareza: ${oficial.rareza || 'N/A'} | Edición: ${oficial.edicion || 'N/A'} | Idioma: ${oficial.idioma || 'N/A'}\n   Cant: ${cantidad} x S/. ${oficial.precio.toFixed(2)} = S/. ${total.toFixed(2)}`);
+            }
+            let mensaje = '📝 *NUEVO PEDIDO DE CARTAS TCG*\n\n' + lineas.join('\n\n');
+            mensaje += `\n\n💰 *TOTAL A PAGAR: S/. ${sumaTotalPedido.toFixed(2)}*`;
+            const enlace = 'https://wa.me/51976689699?text=' + encodeURIComponent(mensaje);
+            window.open(enlace, '_blank', 'noopener,noreferrer');
+        }
+
+        function celda(texto, clase = '') {
+            const td = document.createElement('td');
+            if (clase) td.className = clase;
+            td.textContent = String(texto ?? '');
+            return td;
+        }
+        function renderizarTablaCarrito() {
+            const tbody = document.getElementById('tabla-items-carrito');
+            const totalTabla = document.getElementById('tabla-gran-total');
+            const totalResumen = document.getElementById('resumen-subtotal');
+            const bloqueTabla = document.getElementById('bloque-tabla-imprimir');
+            tbody.replaceChildren();
+            if (!carrito.length) {
+                const fila = document.createElement('tr');
+                const td = celda('Tu carrito está vacío.');
+                td.colSpan = 5; td.style.textAlign = 'center'; td.style.color = '#777'; td.style.padding = '40px';
+                fila.appendChild(td); tbody.appendChild(fila);
+                totalTabla.textContent = 'S/. 0.00';
+                totalResumen.textContent = 'S/. 0.00';
+                bloqueTabla.removeAttribute('data-total');
+                return;
+            }
+            let sumaTotal = 0;
+            carrito.forEach(item => {
+                const clave = identidadCarta(item);
+                const oficial = catalogoPorIdentidad.get(clave) || item;
+                const cantidad = enteroSeguro(item.cantidadSeleccionada, 1);
+                const precioLeido = precioNumerico(oficial.precio);
+                const precioSeguro = Number.isFinite(precioLeido) ? precioLeido : 0;
+                const subtotal = precioSeguro * cantidad;
+                sumaTotal += subtotal;
+                const fila = document.createElement('tr');
+
+                const tdCantidad = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'number'; input.className = 'input-cantidad';
+                input.min = '1'; input.max = String(Math.max(1, enteroSeguro(oficial.cantidad, cantidad))); input.step = '1';
+                input.value = String(cantidad); input.setAttribute('aria-label', 'Cantidad de ' + oficial.nombre);
+                input.addEventListener('change', () => cambiarCantidadInput(clave, input.value));
+                tdCantidad.appendChild(input); fila.appendChild(tdCantidad);
+
+                fila.appendChild(celda(oficial.codigo, 'codigo-empresa'));
+                const tdProducto = document.createElement('td');
+                const nombre = document.createElement('div'); nombre.className = 'nombre-producto'; nombre.textContent = oficial.nombre;
+                const detalles = document.createElement('div'); detalles.className = 'detalles-producto';
+                detalles.textContent = `Colección: ${oficial.coleccion} | Rareza: ${oficial.rareza || 'N/A'} | ${oficial.edicion || 'N/A'} | Idioma: ${oficial.idioma || 'N/A'}`;
+                tdProducto.append(nombre, detalles); fila.appendChild(tdProducto);
+                const tdPrecio = celda('S/. ' + precioSeguro.toFixed(2), 'precio-texto'); tdPrecio.style.textAlign = 'right'; fila.appendChild(tdPrecio);
+                const tdBorrar = document.createElement('td'); tdBorrar.style.textAlign = 'center';
+                const borrar = document.createElement('button'); borrar.type = 'button'; borrar.className = 'btn-borrar-item';
+                borrar.textContent = '🗑️'; borrar.title = 'Eliminar producto'; borrar.setAttribute('aria-label', 'Eliminar ' + oficial.nombre);
+                borrar.addEventListener('click', () => eliminarFilaItem(clave));
+                tdBorrar.appendChild(borrar); fila.appendChild(tdBorrar);
+                tbody.appendChild(fila);
+            });
+            const textoTotal = 'S/. ' + sumaTotal.toFixed(2);
+            totalTabla.textContent = textoTotal; totalResumen.textContent = textoTotal;
+            bloqueTabla.setAttribute('data-total', textoTotal);
+        }
+        function cambiarCantidadInput(clave, nuevaCantidad) {
+            const producto = carrito.find(item => identidadCarta(item) === clave);
+            const oficial = catalogoPorIdentidad.get(clave);
+            if (!producto || !oficial) return;
+            let cantidad = enteroSeguro(nuevaCantidad, 1);
+            cantidad = Math.min(Math.max(1, cantidad), oficial.cantidad);
+            producto.cantidadSeleccionada = cantidad;
+            guardarCarrito(); renderizarTablaCarrito();
+        }
+        function eliminarFilaItem(clave) {
+            carrito = carrito.filter(item => identidadCarta(item) !== clave);
+            guardarCarrito(); renderizarTablaCarrito();
+        }
+        function vaciarCarritoCompleto() {
+            if (!carrito.length) return;
+            if (confirm('¿Estás seguro de que deseas vaciar todo el carrito?')) {
+                carrito = []; guardarCarrito(); renderizarTablaCarrito();
+            }
+        }
+        function descargarPedidoPDF() {
+            if (!carrito.length) return;
+            window.print();
+        }
+        async function iniciarCarrito() {
+            recuperarTemaCarrito();
+            try {
+                await cargarCatalogoSeguro();
+                cargarCarritoDeMemoria();
+            } catch (error) {
+                catalogoValidado = false;
+                // Mostrar la copia guardada aunque el CSV no esté disponible temporalmente.
+                // No guardar un carrito vacío: el pedido del cliente debe conservarse.
+                try {
+                    const guardado = JSON.parse(leerLocalCarrito('carritoGuardado', '[]'));
+                    carrito = Array.isArray(guardado) ? guardado.filter(item => item && typeof item.codigo === 'string') : [];
+                } catch (_) {
+                    carrito = [];
+                }
+                renderizarTablaCarrito();
+                console.error('No fue posible validar el catálogo:', error);
+                alert('No se pudo validar bacserito.csv. Tus productos guardados se conservaron; el pedido por WhatsApp estará deshabilitado hasta recuperar la conexión.');
+            }
+        }
+        window.addEventListener('DOMContentLoaded', iniciarCarrito);
+        </script>
+    </body>
+</html>
