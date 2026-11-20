@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bacseritotcg.github.io/TCG/sitemap.xml
